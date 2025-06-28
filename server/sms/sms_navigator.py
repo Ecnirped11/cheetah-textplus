@@ -8,6 +8,8 @@ def print_sms_banner(console: Console) -> None:
     clear_screen()
     banner = pyfiglet.figlet_format("CH . SMS", font="ansi_shadow")
     console.print(banner, justify="center")
+    
+   
     console.print(
         "[bold green]Deliver SMS straight to your clients inboxes.\n[/bold green]",
         justify="center",

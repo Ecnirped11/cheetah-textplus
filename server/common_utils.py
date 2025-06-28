@@ -10,7 +10,7 @@ def clear_screen() -> None:
 
 
 def choice_selector(choices: list[str]) -> str:
-    return questionary.select("\nSelect an option", choices=choices).ask() or ""
+    return questionary.select("Select an option", choices=choices).ask() or ""
 
 
 def return_buffer() -> None:

@@ -2,3 +2,4 @@ rich
 pyfiglet
 questionary
 dotenv
+tqdm

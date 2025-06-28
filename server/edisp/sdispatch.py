@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from rich import print
 from email.utils import formatdate
 
+
 # content_validator_ptn = r"--subject\s([^\r\n]+)\n--header\s([^\r\n]+)\n--to\s([^\r\n]+)\n--message\s([^\r\n]+)"
 
 
@@ -15,9 +16,11 @@ class EmailHandler:
     def __init__(self, subject: str, header: str, to: str, message: str) -> None:
         self.data: dict[str, str] | None = None
         load_dotenv()
-        self.FROM = os.getenv("FROM", "")
-        self.PASSWD = os.getenv("PASSWD", "")
+        self.FROM = os.getenv("FROM")
+        self.PASSWORD = os.getenv("PASSWORD")
         self.REPLY_TO = os.getenv("REPLY_TO", "")
+        self.PORT = os.getenv("SERVER_PORT")
+        self.SERVER = os.getenv("SERVER")
 
         if self.__check_content_pattern(subject, header, to, message):
             self.data = {
@@ -28,7 +31,7 @@ class EmailHandler:
             }
 
     def __check_env_vars(self) -> bool:
-        if not self.FROM or not self.PASSWD or not self.REPLY_TO:
+        if not self.FROM or not self.PASSWORD or not self.REPLY_TO:
             print(
                 "[bold red]❗ Environment variables are not set properly. "
                 "Please check your .env file.[/bold red]"
@@ -38,7 +41,7 @@ class EmailHandler:
 
     def __check_email_format(self, to: str) -> bool:
         if re.match(self.EMAIL_REGEX, to) is None:
-            print("[bold red]❗ Invalid email format detected.[/bold red]")
+            print("[bold red]\n❗ Invalid email format detected.[/bold red]")
             return False
         return True
 
@@ -53,7 +56,7 @@ class EmailHandler:
     def dispatch(self) -> bool:
         if (self.data is None) or not self.data:
             print(
-                "[bold red]❗ Invalid data format detected. Can't dispatch email.[/bold red]"
+                "[bold red]\n❗ Invalid data format detected. Can't dispatch email.[/bold red]"
             )
             return False
         msg = EmailMessage()
@@ -76,10 +79,20 @@ class EmailHandler:
             """,
             subtype="html",
         )
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(self.FROM, self.PASSWD)
-            smtp.send_message(msg)
-            print("✔️ [bold green]Sent[/bold green]")
+        try:
+            with smtplib.SMTP_SSL(self.SERVER, self.PORT) as smtp:
+                smtp.login(self.FROM, self.PASSWORD)
+                smtp.send_message(msg)
+                print(
+                    f"\n✔️[bold]Your message has been delivered to\n [green]{self.data["to_email"]}[/green][/bold]"
+                  )
+        except smtplib.SMTPConnectError:
+            print(
+                f'\n[bold red]Connection error please try again[/bold red]'
+              )
+        except smtplib.SMTPAuthenticationError:
+            print(
+                f'\n[red bold]Login failed![/red bold]'
+              )
 
         return True
